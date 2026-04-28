@@ -33,21 +33,22 @@ export function ProfileClient({ isAdmin }: { isAdmin: boolean }) {
     <div className="grid gap-8 max-w-4xl mt-6">
       {/* Profile Header */}
       <Card className="p-8 flex flex-col sm:flex-row items-center sm:items-start gap-6">
-        <div className="relative h-28 w-28 shrink-0 rounded-full border-4 border-muted bg-muted/50 flex items-center justify-center shadow-sm overflow-hidden">
-          {profile.avatar ? (
-            <Image 
-              src={profile.avatar} 
-              alt="Profile Picture" 
-              fill 
-              className="object-cover" 
-            />
-          ) : (
-            <User className="h-12 w-12 text-muted-foreground/70" />
-          )}
+        <div className="relative h-28 w-28 shrink-0">
+          <div className="h-full w-full rounded-full border-4 border-muted bg-muted/50 flex items-center justify-center shadow-sm overflow-hidden">
+            {profile.avatar ? (
+                <img 
+                  src={profile.avatar} 
+                  alt="Profile Picture" 
+                  className="object-cover w-full h-full" 
+                />
+            ) : (
+              <User className="h-12 w-12 text-muted-foreground/70" />
+            )}
+          </div>
           
           <button 
             onClick={() => fileInputRef.current?.click()}
-            className="absolute bottom-0 right-0 p-2 border-2 border-background bg-primary text-primary-foreground rounded-full hover:bg-primary/90 transition-colors shadow-sm"
+            className="absolute bottom-0 right-0 p-2 border-2 border-background bg-primary text-primary-foreground rounded-full hover:bg-primary/90 transition-colors shadow-[0_4px_12px_rgba(0,0,0,0.1)] z-10"
           >
             <Camera className="h-4 w-4" />
           </button>

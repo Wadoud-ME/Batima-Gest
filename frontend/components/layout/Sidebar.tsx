@@ -11,21 +11,20 @@ import {
   User,
   ShieldAlert,
 } from "lucide-react";
+
 import { LogoutButton } from "@/components/LogoutButton";
+import { SidebarClientWrapper } from "@/components/layout/SidebarClientWrapper";
 
 export async function Sidebar() {
   const cookieStore = await cookies();
   const mockRole = cookieStore.get("mockRole")?.value || "Resident"; // Default to resident fallback
   const isAdmin = mockRole === "Admin";
-  // Removed unused user email config
 
-  // Explicitly separate sidebar routes to guarantee role isolation
   const residentNav = [
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
     { name: "Announcements", href: "/announcements", icon: Megaphone },
     { name: "My Requests", href: "/maintenance", icon: Wrench },
     { name: "My Documents", href: "/documents", icon: FileText },
-    { name: "My Payments", href: "/payments", icon: CreditCard },
     { name: "Profile", href: "/profile", icon: User },
   ];
 
@@ -34,7 +33,6 @@ export async function Sidebar() {
     { name: "Manage Announcements", href: "/announcements", icon: Megaphone },
     { name: "All Maintenance", href: "/maintenance", icon: Wrench },
     { name: "Manage Documents", href: "/documents", icon: FileText },
-    { name: "Billing & Payments", href: "/payments", icon: CreditCard },
     { name: "User Management", href: "/admin/users", icon: Users },
     { name: "System Settings", href: "/settings", icon: Settings },
   ];
@@ -42,7 +40,7 @@ export async function Sidebar() {
   const navigation = isAdmin ? adminNav : residentNav;
 
   return (
-    <div className="flex flex-col w-64 bg-card border-r border-border h-full shadow-sm text-foreground">
+    <SidebarClientWrapper>
       <div className="flex h-16 shrink-0 items-center px-6">
         <h1 className="text-xl font-bold tracking-tight text-primary">
           Batima-Gest {isAdmin ? "Admin" : "Portal"}
@@ -67,6 +65,6 @@ export async function Sidebar() {
         </div>
         <LogoutButton />
       </div>
-    </div>
+    </SidebarClientWrapper>
   );
 }

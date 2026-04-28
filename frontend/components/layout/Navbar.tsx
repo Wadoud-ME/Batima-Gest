@@ -1,15 +1,22 @@
 "use client";
 
 // import { createClient } from '@/lib/supabase/client'
-import { ThemeToggle } from "@/components/ThemeToggle";
 
-export function Navbar() {
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { motion } from "framer-motion";
+
+export default function Navbar() {
   return (
-    <header className="flex h-16 shrink-0 items-center justify-between gap-x-4 border-b bg-card/80 backdrop-blur-xl px-8 shadow-sm">
+    <motion.header
+      initial={{ y: -20, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+      className="flex h-20 shrink-0 items-center justify-between gap-x-4 border-b border-border/40 bg-background/60 backdrop-blur-2xl px-8 shadow-[0_4px_30px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_30px_rgba(0,0,0,0.1)] sticky top-0 z-30"
+    >
       <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6"></div>
       <div className="flex items-center gap-x-4 lg:gap-x-6">
         <ThemeToggle />
       </div>
-    </header>
+    </motion.header>
   );
 }

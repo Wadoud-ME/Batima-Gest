@@ -19,6 +19,7 @@ export function DocumentsClient({ isAdmin }: { isAdmin: boolean }) {
       category: "Rules",
       uploaded_by: { name: "Sarah Admin" },
       created_at: new Date().toISOString(),
+      fileUrl: "", // Will be generated on demand for mocks
     },
     {
       id: "2",
@@ -26,6 +27,7 @@ export function DocumentsClient({ isAdmin }: { isAdmin: boolean }) {
       category: "Financial reports",
       uploaded_by: { name: "Sarah Admin" },
       created_at: new Date(Date.now() - 3600000).toISOString(),
+      fileUrl: "",
     },
     {
       id: "3",
@@ -33,11 +35,13 @@ export function DocumentsClient({ isAdmin }: { isAdmin: boolean }) {
       category: "Meeting reports",
       uploaded_by: { name: "Bob Admin" },
       created_at: new Date(Date.now() - 86400000 * 30).toISOString(),
+      fileUrl: "",
     },
   ]);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({ title: "", category: "Rules" });
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const handleDelete = (id: string) => {
     if (confirm("Are you sure you want to delete this document?")) {
@@ -45,14 +49,31 @@ export function DocumentsClient({ isAdmin }: { isAdmin: boolean }) {
     }
   };
 
-  const handleDownload = (title: string) => {
-    // Fake download interaction
-    alert(`Downloading: ${title}.pdf`);
+  const handleDownload = (doc: typeof documents[0]) => {
+    let url = doc.fileUrl;
+    if (!url) {
+      // Generate a mock text file blob if it's a hardcoded mock document
+      const blob = new Blob([`Mock content for ${doc.title}`], { type: "text/plain" });
+      url = URL.createObjectURL(blob);
+    }
+    
+    // Trigger actual browser download
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = doc.title.includes('.') ? doc.title : `${doc.title}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
   };
 
   const handleUpload = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.title) return;
+    
+    let objectUrl = "";
+    if (selectedFile) {
+      objectUrl = URL.createObjectURL(selectedFile);
+    }
 
     const newDoc = {
       id: Math.random().toString(36).substr(2, 9),
@@ -60,11 +81,13 @@ export function DocumentsClient({ isAdmin }: { isAdmin: boolean }) {
       category: formData.category,
       uploaded_by: { name: "Sarah Admin" }, // mock
       created_at: new Date().toISOString(),
+      fileUrl: objectUrl,
     };
 
     setDocuments([newDoc, ...documents]);
     setIsModalOpen(false);
     setFormData({ title: "", category: "Rules" });
+    setSelectedFile(null);
   };
 
   return (
@@ -133,7 +156,7 @@ export function DocumentsClient({ isAdmin }: { isAdmin: boolean }) {
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => handleDownload(doc.title)}
+                      onClick={() => handleDownload(doc)}
                       className="h-8 w-8 text-muted-foreground group-hover:text-primary transition-colors">
                       <Download className="h-4 w-4" />
                     </Button>
@@ -203,7 +226,8 @@ export function DocumentsClient({ isAdmin }: { isAdmin: boolean }) {
                     <input
                       type="file"
                       className="hidden"
-                      accept=".pdf,.doc,.docx"
+                      accept=".pdf,.doc,.docx,.txt"
+                      onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
                       required
                     />
                   </label>

@@ -115,17 +115,6 @@ export function SettingsClient() {
               <span className="translate-x-6 inline-block h-4 w-4 transform rounded-full bg-background transition-transform" />
             </button>
           </div>
-          <div className="flex items-center justify-between p-4 border rounded-xl hover:bg-muted/30 transition-colors">
-            <div>
-              <p className="font-semibold">Payment Receipts</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                Send PDF via email
-              </p>
-            </div>
-            <button className="relative inline-flex h-6 w-11 items-center rounded-full bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">
-              <span className="translate-x-1 inline-block h-4 w-4 transform rounded-full bg-background shadow-sm transition-transform" />
-            </button>
-          </div>
         </div>
       </Card>
 
