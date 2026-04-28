@@ -10,6 +10,8 @@ import {
   Trash2,
   X,
 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { createPortal } from "react-dom";
 
 export function DocumentsClient({ isAdmin }: { isAdmin: boolean }) {
   const [documents, setDocuments] = useState([
@@ -42,10 +44,18 @@ export function DocumentsClient({ isAdmin }: { isAdmin: boolean }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({ title: "", category: "Rules" });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  
+  const [docToDelete, setDocToDelete] = useState<{ id: string; title: string } | null>(null);
+  const [mounted, setMounted] = useState(() => typeof window !== "undefined");
 
-  const handleDelete = (id: string) => {
-    if (confirm("Are you sure you want to delete this document?")) {
-      setDocuments((prev) => prev.filter((d) => d.id !== id));
+  const promptDelete = (id: string, title: string) => {
+    setDocToDelete({ id, title });
+  };
+
+  const confirmDelete = () => {
+    if (docToDelete) {
+      setDocuments((prev) => prev.filter((d) => d.id !== docToDelete.id));
+      setDocToDelete(null);
     }
   };
 
@@ -90,8 +100,28 @@ export function DocumentsClient({ isAdmin }: { isAdmin: boolean }) {
     setSelectedFile(null);
   };
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.15,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, scale: 0.95, y: 20 },
+    show: { opacity: 1, scale: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } },
+  };
+
   return (
-    <div className="space-y-6 relative">
+    <motion.div 
+      variants={containerVariants}
+      initial="hidden"
+      animate="show"
+      className="space-y-6 relative"
+    >
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <div>
           <h1 className="text-3xl font-bold text-foreground">
@@ -121,9 +151,9 @@ export function DocumentsClient({ isAdmin }: { isAdmin: boolean }) {
           </div>
         ) : (
           documents.map((doc) => (
-            <Card
-              key={doc.id}
-              className="p-6 hover:shadow-md transition-shadow group flex flex-col h-full">
+            <motion.div variants={itemVariants} key={doc.id}>
+              <Card
+                className="p-6 hover:shadow-xl transition-all duration-300 group flex flex-col h-full bg-card/60 backdrop-blur-xl border-border/40">
               <div className="flex justify-between items-start mb-4">
                 <div className="p-3 bg-primary/10 text-primary rounded-xl">
                   <FileText className="h-6 w-6" />
@@ -148,7 +178,7 @@ export function DocumentsClient({ isAdmin }: { isAdmin: boolean }) {
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => handleDelete(doc.id)}
+                        onClick={() => promptDelete(doc.id, doc.title)}
                         className="h-8 w-8 text-destructive hover:bg-destructive/10 transition-colors">
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -165,25 +195,36 @@ export function DocumentsClient({ isAdmin }: { isAdmin: boolean }) {
                 {isAdmin && <span>By: {doc.uploaded_by.name}</span>}
               </div>
             </Card>
+          </motion.div>
           ))
         )}
       </div>
 
       {/* Upload Modal (Admin Only) */}
-      {isModalOpen && isAdmin && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <Card className="w-full max-w-sm p-6 bg-card border-border shadow-xl animate-in fade-in zoom-in duration-200">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-bold text-foreground">
-                Upload Document
-              </h2>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setIsModalOpen(false)}>
-                <X className="h-5 w-5 text-muted-foreground" />
-              </Button>
-            </div>
+      {isModalOpen && isAdmin && mounted && createPortal(
+        <AnimatePresence>
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+          >
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0, y: 10 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              className="w-full max-w-md p-7 bg-card border-border/50 shadow-2xl rounded-3xl relative"
+            >
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold tracking-tight text-foreground">
+                  Upload Document
+                </h2>
+                <button 
+                  onClick={() => setIsModalOpen(false)}
+                  className="absolute right-6 top-6 text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
             <form onSubmit={handleUpload} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="title">Document Title</Label>
@@ -234,18 +275,65 @@ export function DocumentsClient({ isAdmin }: { isAdmin: boolean }) {
                 </div>
               </div>
               <div className="flex justify-end gap-3 mt-6">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setIsModalOpen(false)}>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="rounded-xl"
+                    onClick={() => setIsModalOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button type="submit" className="rounded-xl shadow-md">Upload File</Button>
+                </div>
+              </form>
+            </motion.div>
+          </motion.div>
+        </AnimatePresence>,
+        document.body
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {docToDelete && mounted && createPortal(
+        <AnimatePresence>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 10 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              className="bg-card text-card-foreground w-full max-w-md rounded-3xl shadow-2xl p-7 border border-border/50 relative"
+            >
+              <button 
+                onClick={() => setDocToDelete(null)}
+                className="absolute right-6 top-6 text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+              <h2 className="text-2xl font-bold pr-8">Delete Document</h2>
+              <div className="py-6">
+                <p className="text-muted-foreground leading-relaxed">
+                  Are you sure you want to permanently delete the document <strong>{docToDelete.title}</strong>? This action cannot be undone.
+                </p>
+              </div>
+              <div className="flex justify-end gap-3 pt-2">
+                <Button variant="ghost" onClick={() => setDocToDelete(null)} className="rounded-xl">
                   Cancel
                 </Button>
-                <Button type="submit">Upload File</Button>
+                <Button 
+                  variant="destructive"
+                  onClick={confirmDelete}
+                  className="rounded-xl shadow-md border border-destructive/40"
+                >
+                  Confirm Delete
+                </Button>
               </div>
-            </form>
-          </Card>
-        </div>
+            </motion.div>
+          </motion.div>
+        </AnimatePresence>,
+        document.body
       )}
-    </div>
+    </motion.div>
   );
 }

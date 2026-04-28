@@ -13,6 +13,8 @@ import {
   Eye,
 } from "lucide-react";
 import { toast } from "sonner";
+import { motion, AnimatePresence } from "framer-motion";
+import { createPortal } from "react-dom";
 
 export function AnnouncementsClient({ isAdmin }: { isAdmin: boolean }) {
   const [announcements, setAnnouncements] = useState([
@@ -39,6 +41,9 @@ export function AnnouncementsClient({ isAdmin }: { isAdmin: boolean }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState({ title: "", content: "" });
+
+  const [announcementToDelete, setAnnouncementToDelete] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(() => typeof window !== "undefined");
 
   const handleOpenModal = (announcement?: any) => {
     if (announcement) {
@@ -74,13 +79,40 @@ export function AnnouncementsClient({ isAdmin }: { isAdmin: boolean }) {
     setIsModalOpen(false);
   };
 
-  const handleDelete = (id: string) => {
-    setAnnouncements((prev) => prev.filter((a) => a.id !== id));
-    toast.info("Announcement removed");
+  const promptDelete = (id: string) => {
+    setAnnouncementToDelete(id);
+  };
+
+  const confirmDelete = () => {
+    if (announcementToDelete) {
+      setAnnouncements((prev) => prev.filter((a) => a.id !== announcementToDelete));
+      toast.info("Announcement removed");
+      setAnnouncementToDelete(null);
+    }
+  };
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.15,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, scale: 0.95, y: 20 },
+    show: { opacity: 1, scale: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } },
   };
 
   return (
-    <div className="space-y-6 max-w-5xl">
+    <motion.div 
+      variants={containerVariants}
+      initial="hidden"
+      animate="show"
+      className="space-y-6 max-w-5xl"
+    >
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 relative mb-8">
         <div>
           <h1 className="text-3xl font-bold tracking-tight flex items-center gap-3">
@@ -123,9 +155,9 @@ export function AnnouncementsClient({ isAdmin }: { isAdmin: boolean }) {
           </Card>
         ) : (
           announcements.map((announcement, index) => (
+            <motion.div variants={itemVariants} key={announcement.id}>
             <Card
-              key={announcement.id}
-              className={`p-0 overflow-hidden relative transition-all duration-300 hover:shadow-md ${index === 0 ? "border-primary/50 shadow-primary/5" : "border-border shadow-sm"}`}>
+              className={`p-0 overflow-hidden relative transition-all duration-300 hover:shadow-xl bg-card/60 backdrop-blur-xl ${index === 0 ? "border-primary/50 shadow-primary/5" : "border-border/40 shadow-sm"}`}>
               {index === 0 && (
                 <div className="absolute top-0 right-0 px-3 py-1 bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-wider rounded-bl-xl shadow-sm z-10">
                   Pinned
@@ -180,8 +212,8 @@ export function AnnouncementsClient({ isAdmin }: { isAdmin: boolean }) {
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => handleDelete(announcement.id)}
-                        className="hover:bg-destructive/10 hover:text-destructive transition-colors">
+                        onClick={() => promptDelete(announcement.id)}
+                        className="hover:bg-destructive/10 hover:text-destructive transition-colors rounded-xl">
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
@@ -189,65 +221,120 @@ export function AnnouncementsClient({ isAdmin }: { isAdmin: boolean }) {
                 </div>
               </div>
             </Card>
+            </motion.div>
           ))
         )}
       </div>
 
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
-          <Card className="w-full max-w-lg shadow-2xl border-primary/20 translate-y-0 animate-in slide-in-from-bottom-5">
-            <div className="flex justify-between items-center p-6 border-b border-border bg-muted/10">
-              <h2 className="text-xl font-bold flex items-center gap-2">
-                <Megaphone className="h-5 w-5 text-primary" />
-                {editingId ? "Edit Broadcast" : "New Broadcast"}
-              </h2>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setIsModalOpen(false)}
-                className="rounded-full hover:bg-destructive/10 hover:text-destructive">
-                <X className="h-5 w-5" />
-              </Button>
-            </div>
-
-            <div className="p-6 space-y-6">
-              <div className="space-y-3">
-                <Label className="text-sm font-semibold">Message Title</Label>
-                <Input
-                  placeholder="e.g., Garage Cleaning Required"
-                  value={formData.title}
-                  onChange={(e) =>
-                    setFormData({ ...formData, title: e.target.value })
-                  }
-                  className="font-medium text-lg placeholder:font-normal bg-card focus-visible:ring-primary"
-                />
+      {isModalOpen && mounted && createPortal(
+        <AnimatePresence>
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[100]"
+          >
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0, y: 10 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              className="w-full max-w-lg shadow-2xl rounded-3xl border border-border/50 bg-card relative p-7"
+            >
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold flex items-center gap-2 tracking-tight">
+                  <Megaphone className="h-6 w-6 text-primary" />
+                  {editingId ? "Edit Broadcast" : "New Broadcast"}
+                </h2>
+                <button
+                  onClick={() => setIsModalOpen(false)}
+                  className="absolute right-6 top-6 rounded-full hover:bg-destructive/10 hover:text-destructive text-muted-foreground p-2 transition-colors">
+                  <X className="h-5 w-5" />
+                </button>
               </div>
-              <div className="space-y-3">
-                <Label className="text-sm font-semibold">
-                  Detailed Context
-                </Label>
-                <Textarea
-                  placeholder="Provide all necessary information to the residents..."
-                  value={formData.content}
-                  className="min-h-[160px] bg-card focus-visible:ring-primary resize-none"
-                  onChange={(e) =>
-                    setFormData({ ...formData, content: e.target.value })
-                  }
-                />
-              </div>
-            </div>
 
-            <div className="flex justify-end gap-3 p-6 border-t border-border bg-muted/10">
-              <Button variant="outline" onClick={() => setIsModalOpen(false)}>
-                Discard
-              </Button>
-              <Button onClick={handleSave} className="shadow-md">
-                {editingId ? "Update Notice" : "Publish to All"}
-              </Button>
-            </div>
-          </Card>
-        </div>
+              <div className="space-y-6">
+                <div className="space-y-2 relative group">
+                  <Label className="text-sm font-semibold">Message Title</Label>
+                  <Input
+                    placeholder="e.g., Garage Cleaning Required"
+                    value={formData.title}
+                    onChange={(e) =>
+                      setFormData({ ...formData, title: e.target.value })
+                    }
+                    className="font-medium text-lg placeholder:font-normal bg-card/50 transition-colors focus:ring-primary h-12"
+                  />
+                </div>
+                <div className="space-y-2 relative group">
+                  <Label className="text-sm font-semibold">
+                    Detailed Context
+                  </Label>
+                  <Textarea
+                    placeholder="Provide all necessary information to the residents..."
+                    value={formData.content}
+                    className="min-h-[160px] bg-card/50 focus-visible:ring-primary resize-none transition-colors"
+                    onChange={(e) =>
+                      setFormData({ ...formData, content: e.target.value })
+                    }
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-8">
+                <Button variant="ghost" className="rounded-xl" onClick={() => setIsModalOpen(false)}>
+                  Discard
+                </Button>
+                <Button onClick={handleSave} className="shadow-md rounded-xl">
+                  {editingId ? "Update Notice" : "Publish to All"}
+                </Button>
+              </div>
+            </motion.div>
+          </motion.div>
+        </AnimatePresence>,
+        document.body
       )}
-    </div>
+
+      {/* Delete Confirmation Modal */}
+      {announcementToDelete && mounted && createPortal(
+        <AnimatePresence>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 10 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              className="bg-card text-card-foreground w-full max-w-md rounded-3xl shadow-2xl p-7 border border-border/50 relative"
+            >
+              <button 
+                onClick={() => setAnnouncementToDelete(null)}
+                className="absolute right-6 top-6 text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+              <h2 className="text-2xl font-bold pr-8">Remove Notice</h2>
+              <div className="py-6">
+                <p className="text-muted-foreground leading-relaxed">
+                  Are you sure you want to delete this announcement? It will be removed from the community board permanently.
+                </p>
+              </div>
+              <div className="flex justify-end gap-3 pt-2">
+                <Button variant="ghost" onClick={() => setAnnouncementToDelete(null)} className="rounded-xl">
+                  Cancel
+                </Button>
+                <Button 
+                  variant="destructive"
+                  onClick={confirmDelete}
+                  className="rounded-xl shadow-md border border-destructive/40"
+                >
+                  Delete Notice
+                </Button>
+              </div>
+            </motion.div>
+          </motion.div>
+        </AnimatePresence>,
+        document.body
+      )}
+    </motion.div>
   );
 }

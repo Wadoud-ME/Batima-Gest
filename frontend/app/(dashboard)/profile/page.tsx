@@ -7,7 +7,7 @@ export default async function ProfilePage() {
   const isAdmin = mockRole === "Admin";
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-8 w-full">
       <div>
         <h1 className="text-3xl font-bold tracking-tight text-foreground">
           My Profile

@@ -22,7 +22,7 @@ export function LogoutButton() {
       "mockRole=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
     toast.success("Logged out successfully (Mock)");
     setIsOpen(false);
-    router.push("/login");
+    window.location.href = "/login";
   };
 
   return (

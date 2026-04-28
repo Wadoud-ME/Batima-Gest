@@ -130,13 +130,19 @@ export default function AdminDashboardPage() {
             <h3 className="text-lg font-semibold tracking-tight">Quick Actions</h3>
           </div>
           <div className="p-6 grid grid-cols-2 gap-4">
-            <button className="flex flex-col items-center justify-center p-6 space-y-4 rounded-xl border border-border/60 bg-muted/10 hover:bg-primary/5 hover:border-primary/30 transition-all group">
+            <button 
+              onClick={() => router.push('/announcements')}
+              className="flex flex-col items-center justify-center p-6 space-y-4 rounded-xl border border-border/60 bg-muted/10 hover:bg-primary/5 hover:border-primary/30 transition-all group"
+            >
               <div className="p-3 bg-primary/10 text-primary rounded-full group-hover:scale-110 transition-transform">
                 <Megaphone className="h-6 w-6" />
               </div>
               <span className="font-semibold text-sm">Post Notice</span>
             </button>
-            <button className="flex flex-col items-center justify-center p-6 space-y-4 rounded-xl border border-border/60 bg-muted/10 hover:bg-amber-500/5 hover:border-amber-500/30 transition-all group">
+            <button 
+              onClick={() => router.push('/maintenance')}
+              className="flex flex-col items-center justify-center p-6 space-y-4 rounded-xl border border-border/60 bg-muted/10 hover:bg-amber-500/5 hover:border-amber-500/30 transition-all group"
+            >
               <div className="p-3 bg-amber-500/10 text-amber-500 rounded-full group-hover:scale-110 transition-transform">
                 <Wrench className="h-6 w-6" />
               </div>

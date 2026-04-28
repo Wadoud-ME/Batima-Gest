@@ -28,13 +28,12 @@ export default function LoginPage() {
       if (email.includes("admin")) {
         document.cookie = "mockRole=Admin; path=/";
         toast.success("Welcome back, Administrator!");
-        router.push("/admin");
+        window.location.href = "/admin";
       } else {
         document.cookie = "mockRole=Resident; path=/";
         toast.success("Welcome back! You have successfully logged in.");
-        router.push("/dashboard");
+        window.location.href = "/dashboard";
       }
-      setLoading(false);
     }, 800);
   };
 
@@ -46,8 +45,7 @@ export default function LoginPage() {
     
     setTimeout(() => {
       document.cookie = `mockRole=${role}; path=/`;
-      router.push(role === 'Admin' ? "/admin" : "/dashboard");
-      setLoading(false);
+      window.location.href = role === 'Admin' ? "/admin" : "/dashboard";
     }, 800);
   };
 

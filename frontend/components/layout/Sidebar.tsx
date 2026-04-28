@@ -24,7 +24,6 @@ export async function Sidebar() {
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
     { name: "Announcements", href: "/announcements", icon: Megaphone },
     { name: "My Requests", href: "/maintenance", icon: Wrench },
-    { name: "My Documents", href: "/documents", icon: FileText },
     { name: "Profile", href: "/profile", icon: User },
   ];
 

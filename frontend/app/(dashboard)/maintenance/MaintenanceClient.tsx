@@ -14,6 +14,8 @@ import {
   CircleDashed,
 } from "lucide-react";
 import { toast } from "sonner";
+import { motion, AnimatePresence } from "framer-motion";
+import { createPortal } from "react-dom";
 
 export function MaintenanceClient({
   isAdmin,
@@ -54,6 +56,7 @@ export function MaintenanceClient({
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({ title: "", description: "" });
+  const [mounted, setMounted] = useState(() => typeof window !== "undefined");
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -117,8 +120,28 @@ export function MaintenanceClient({
     ? requests
     : requests.filter((r) => r.resident.id === (currentUser?.id || "user-1"));
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.15,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, scale: 0.95, y: 20 },
+    show: { opacity: 1, scale: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } },
+  };
+
   return (
-    <div className="space-y-6 max-w-6xl">
+    <motion.div 
+      variants={containerVariants}
+      initial="hidden"
+      animate="show"
+      className="space-y-6 max-w-6xl relative"
+    >
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <div>
           <h1 className="text-3xl font-bold tracking-tight flex items-center gap-3">
@@ -165,10 +188,10 @@ export function MaintenanceClient({
         ) : (
           <div className="grid lg:grid-cols-2 gap-4">
             {filteredRequests.map((req) => (
+              <motion.div variants={itemVariants} key={req.id}>
               <Card
-                key={req.id}
-                className="flex flex-col p-0 overflow-hidden shadow-sm hover:shadow-md transition-all group border-border">
-                <div className="p-6 pb-4 border-b border-border bg-card">
+                className="flex flex-col p-0 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 group border-border/40 bg-card/60 backdrop-blur-xl h-full">
+                <div className="p-6 pb-4 border-b border-border/40 bg-card/50">
                   <div className="flex justify-between items-start mb-2">
                     <h3 className="font-bold text-lg text-foreground group-hover:text-amber-500 transition-colors">
                       {req.title}
@@ -218,74 +241,85 @@ export function MaintenanceClient({
                   </div>
                 )}
               </Card>
+              </motion.div>
             ))}
           </div>
         )}
       </div>
 
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
-          <Card className="w-full max-w-lg shadow-2xl border-amber-500/20 translate-y-0 animate-in slide-in-from-bottom-5">
-            <div className="flex justify-between items-center p-6 border-b border-border bg-muted/10">
-              <h2 className="text-xl font-bold flex items-center gap-2">
-                <Wrench className="h-5 w-5 text-amber-500" /> Need Maintenance?
-              </h2>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setIsModalOpen(false)}
-                className="rounded-full">
-                <X className="h-5 w-5" />
-              </Button>
-            </div>
-            <div className="p-6 space-y-6">
-              <div className="space-y-3 relative group">
-                <Label className="text-sm font-semibold text-muted-foreground">
-                  Short Summary
-                </Label>
-                <Input
-                  placeholder="e.g., A/C Unit vibrating loudly"
-                  value={formData.title}
-                  onChange={(e) =>
-                    setFormData({ ...formData, title: e.target.value })
-                  }
-                  className="font-medium bg-card group-hover:border-amber-500/50 transition-colors"
-                />
+      {isModalOpen && mounted && createPortal(
+        <AnimatePresence>
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[100]"
+          >
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0, y: 10 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              className="w-full max-w-lg shadow-2xl rounded-3xl border border-border/50 bg-card relative p-7"
+            >
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold flex items-center gap-2 tracking-tight">
+                  <Wrench className="h-6 w-6 text-amber-500" /> Need Maintenance?
+                </h2>
+                <button
+                  onClick={() => setIsModalOpen(false)}
+                  className="absolute right-6 top-6 rounded-full hover:bg-destructive/10 hover:text-destructive text-muted-foreground p-2 transition-colors">
+                  <X className="h-5 w-5" />
+                </button>
               </div>
-              <div className="space-y-3 relative group">
-                <Label className="text-sm font-semibold text-muted-foreground">
-                  Problem Details
-                </Label>
-                <Textarea
-                  placeholder="Describe where the issue is and when it started..."
-                  value={formData.description}
-                  onChange={(e) =>
-                    setFormData({ ...formData, description: e.target.value })
-                  }
-                  className="min-h-[120px] bg-card resize-none group-hover:border-amber-500/50 transition-colors"
-                />
+              <div className="space-y-6">
+                <div className="space-y-2 relative group">
+                  <Label className="text-sm font-semibold text-muted-foreground">
+                    Short Summary
+                  </Label>
+                  <Input
+                    placeholder="e.g., A/C Unit vibrating loudly"
+                    value={formData.title}
+                    onChange={(e) =>
+                      setFormData({ ...formData, title: e.target.value })
+                    }
+                    className="font-medium bg-card/50 transition-colors focus:ring-amber-500 h-12"
+                  />
+                </div>
+                <div className="space-y-2 relative group">
+                  <Label className="text-sm font-semibold text-muted-foreground">
+                    Problem Details
+                  </Label>
+                  <Textarea
+                    placeholder="Describe where the issue is and when it started..."
+                    value={formData.description}
+                    onChange={(e) =>
+                      setFormData({ ...formData, description: e.target.value })
+                    }
+                    className="min-h-[120px] bg-card/50 resize-none transition-colors focus-visible:ring-amber-500"
+                  />
+                </div>
+                <div className="pt-2">
+                  <Button
+                    variant="outline"
+                    className="w-full border-dashed border-2 hover:border-amber-500 hover:text-amber-500 hover:bg-amber-500/5 h-12">
+                    <ImageIcon className="h-4 w-4 mr-2" /> Attach Photo (Optional)
+                  </Button>
+                </div>
               </div>
-              <div className="pt-2">
+              <div className="flex justify-end gap-3 pt-8">
+                <Button variant="ghost" className="rounded-xl" onClick={() => setIsModalOpen(false)}>
+                  Cancel
+                </Button>
                 <Button
-                  variant="outline"
-                  className="w-full border-dashed border-2 hover:border-amber-500 hover:text-amber-500 hover:bg-amber-500/5">
-                  <ImageIcon className="h-4 w-4 mr-2" /> Attach Photo (Optional)
+                  onClick={handleCreate}
+                  className="bg-amber-600 hover:bg-amber-700 text-white shadow-md rounded-xl">
+                  Submit Ticket
                 </Button>
               </div>
-            </div>
-            <div className="flex justify-end gap-3 p-6 border-t border-border bg-muted/10">
-              <Button variant="ghost" onClick={() => setIsModalOpen(false)}>
-                Cancel
-              </Button>
-              <Button
-                onClick={handleCreate}
-                className="bg-amber-600 hover:bg-amber-700 text-white shadow-sm shadow-amber-500/20">
-                Submit Ticket
-              </Button>
-            </div>
-          </Card>
-        </div>
+            </motion.div>
+          </motion.div>
+        </AnimatePresence>,
+        document.body
       )}
-    </div>
+    </motion.div>
   );
 }
