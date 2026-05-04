@@ -10,7 +10,7 @@ export function cn(...inputs: ClassValue[]) {
 export const Button = React.forwardRef<
   HTMLButtonElement,
   React.ButtonHTMLAttributes<HTMLButtonElement> & {
-    variant?: "default" | "ghost" | "outline" | "secondary";
+    variant?: "default" | "ghost" | "outline" | "secondary" | "destructive";
     size?: "default" | "sm" | "lg" | "icon";
   }
 >(({ className, variant = "default", size = "default", ...props }, ref) => {
@@ -19,6 +19,8 @@ export const Button = React.forwardRef<
 
   const variants = {
     default: "bg-primary text-primary-foreground shadow hover:bg-primary/90",
+    destructive:
+      "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90",
     ghost: "hover:bg-accent hover:text-accent-foreground",
     outline:
       "border border-border bg-background hover:bg-accent hover:text-accent-foreground",

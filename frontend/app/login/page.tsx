@@ -6,12 +6,14 @@ import { Button, Input, Card } from "@/components/ui";
 import { toast } from "sonner";
 import Link from "next/link";
 import { Hexagon } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const supabase = createClient();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,30 +25,88 @@ export default function LoginPage() {
       return;
     }
 
-    setTimeout(() => {
-      // Mock login logic
-      if (email.includes("admin")) {
-        document.cookie = "mockRole=Admin; path=/";
-        toast.success("Welcome back, Administrator!");
-        window.location.href = "/admin";
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      toast.error(error.message);
+      setLoading(false);
+      return;
+    }
+
+    // Get user role from the users table
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data: profile } = await supabase
+        .from("users")
+        .select("role")
+        .eq("id", user.id)
+        .single();
+
+      toast.success("Welcome back!");
+      if (profile?.role === "Admin") {
+        router.push("/admin");
       } else {
-        document.cookie = "mockRole=Resident; path=/";
-        toast.success("Welcome back! You have successfully logged in.");
-        window.location.href = "/dashboard";
+        router.push("/dashboard");
       }
-    }, 800);
+      router.refresh();
+    }
   };
 
-  const handleDemoLogin = (role: 'Admin' | 'Resident') => {
+  const handleDemoLogin = async (role: 'Admin' | 'Resident') => {
     setLoading(true);
-    setEmail(role === 'Admin' ? "admin@batima.demo" : "resident@batima.demo");
-    setPassword("demo123");
-    toast.success(`Demo ${role} loaded! Logging in...`);
-    
-    setTimeout(() => {
-      document.cookie = `mockRole=${role}; path=/`;
-      window.location.href = role === 'Admin' ? "/admin" : "/dashboard";
-    }, 800);
+    const demoEmail = role === 'Admin' ? "admin@batima.demo" : "resident@batima.demo";
+    const demoPassword = "demo123456";
+
+    setEmail(demoEmail);
+    setPassword(demoPassword);
+
+    let { error } = await supabase.auth.signInWithPassword({
+      email: demoEmail,
+      password: demoPassword,
+    });
+
+    if (error && error.message.includes("Invalid login credentials")) {
+      // Demo user doesn't exist yet, let's create it on the fly!
+      const { error: signUpError } = await supabase.auth.signUp({
+        email: demoEmail,
+        password: demoPassword,
+        options: {
+          data: {
+            name: role === 'Admin' ? "Demo Admin" : "Demo Resident",
+            role: role,
+          }
+        }
+      });
+      
+      if (signUpError) {
+        toast.error(`Failed to create demo account: ${signUpError.message}`);
+        setLoading(false);
+        return;
+      }
+      
+      // Sign in after creation
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: demoEmail,
+        password: demoPassword,
+      });
+      
+      if (signInError) {
+         toast.error(`Demo login failed: ${signInError.message}`);
+         setLoading(false);
+         return;
+      }
+    } else if (error) {
+      toast.error(`Demo login failed: ${error.message}`);
+      setLoading(false);
+      return;
+    }
+
+    toast.success(`Demo ${role} logged in!`);
+    router.push(role === 'Admin' ? "/admin" : "/dashboard");
+    router.refresh();
   };
 
   return (

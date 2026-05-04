@@ -6,32 +6,52 @@ import { Button, Input, Card } from "@/components/ui";
 import { toast } from "sonner";
 import Link from "next/link";
 import { Hexagon } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
 
 export default function SignupPage() {
   const [email, setEmail] = useState("");
   const [fullName, setFullName] = useState("");
-  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const supabase = createClient();
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
-    if (!email || !password || !fullName || !username) {
+    if (!email || !password || !fullName) {
       toast.error("Please fill in all fields.");
       setLoading(false);
       return;
     }
 
-    setTimeout(() => {
-      // Mock signup logic
-      document.cookie = "mockRole=Resident; path=/";
-      toast.success("Account created successfully. Welcome!");
-      router.push("/dashboard");
+    if (password.length < 6) {
+      toast.error("Password must be at least 6 characters.");
       setLoading(false);
-    }, 1000);
+      return;
+    }
+
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          name: fullName,
+          role: "Resident", // New signups are always Residents
+        },
+      },
+    });
+
+    if (error) {
+      toast.error(error.message);
+      setLoading(false);
+      return;
+    }
+
+    toast.success("Account created successfully! Welcome!");
+    router.push("/dashboard");
+    router.refresh();
   };
 
   return (
@@ -52,7 +72,7 @@ export default function SignupPage() {
             <div>
               <Input
                 type="email"
-                placeholder="Mobile Number or Email"
+                placeholder="Email Address"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="bg-muted/30 border-border/60 text-base h-12 focus-visible:ring-1 focus-visible:ring-primary focus-visible:bg-background rounded-md"
@@ -71,18 +91,8 @@ export default function SignupPage() {
             </div>
             <div>
               <Input
-                type="text"
-                placeholder="Username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                className="bg-muted/30 border-border/60 text-base h-12 focus-visible:ring-1 focus-visible:ring-primary focus-visible:bg-background rounded-md"
-                required
-              />
-            </div>
-            <div>
-              <Input
                 type="password"
-                placeholder="Password"
+                placeholder="Password (min. 6 characters)"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="bg-muted/30 border-border/60 text-base h-12 focus-visible:ring-1 focus-visible:ring-primary focus-visible:bg-background rounded-md"

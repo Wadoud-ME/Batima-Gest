@@ -1,10 +1,20 @@
-import { cookies } from "next/headers";
+import { createClient } from "@/lib/supabase/server";
+import { redirect } from "next/navigation";
 import { ProfileClient } from "./ProfileClient";
 
 export default async function ProfilePage() {
-  const cookieStore = await cookies();
-  const mockRole = cookieStore.get("mockRole")?.value || "Resident";
-  const isAdmin = mockRole === "Admin";
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) redirect("/login");
+
+  const { data: profile } = await supabase
+    .from("users")
+    .select("*")
+    .eq("id", user.id)
+    .single();
+
+  const isAdmin = profile?.role === "Admin";
 
   return (
     <div className="flex flex-col gap-8 w-full">
@@ -17,7 +27,7 @@ export default async function ProfilePage() {
         </p>
       </div>
 
-      <ProfileClient isAdmin={isAdmin} />
+      <ProfileClient isAdmin={isAdmin} userId={user.id} initialProfile={profile} />
     </div>
   );
 }

@@ -1,12 +1,20 @@
-import { cookies } from "next/headers";
+import { createClient } from "@/lib/supabase/server";
+import { redirect } from "next/navigation";
 import { DocumentsClient } from "./DocumentsClient";
 
-export const dynamic = "force-dynamic";
-
 export default async function DocumentsPage() {
-  const cookieStore = await cookies();
-  const mockRole = cookieStore.get("mockRole")?.value || "Resident";
-  const isAdmin = mockRole === "Admin";
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
 
-  return <DocumentsClient isAdmin={isAdmin} />;
+  if (!user) redirect("/login");
+
+  const { data: profile } = await supabase
+    .from("users")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+
+  const isAdmin = profile?.role === "Admin";
+
+  return <DocumentsClient isAdmin={isAdmin} userId={user.id} />;
 }
