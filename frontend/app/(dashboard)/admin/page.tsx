@@ -35,7 +35,7 @@ export default function AdminDashboardPage() {
   if (loading) return <div className="flex items-center justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
 
   return (
-    <div className="space-y-8 max-w-7xl animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="space-y-8 max-w-7xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="mb-2 relative">
         <div className="absolute -left-4 top-1 w-1 h-12 bg-primary rounded-r-md"></div>
         <h1 className="text-3xl font-bold tracking-tight text-foreground flex items-center gap-3">Admin Overview <ShieldAlert className="h-6 w-6 text-primary mt-1" /></h1>

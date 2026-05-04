@@ -161,7 +161,7 @@ export function AnnouncementsClient({ isAdmin, userId }: { isAdmin: boolean; use
       variants={containerVariants}
       initial="hidden"
       animate="show"
-      className="space-y-6 max-w-5xl"
+      className="space-y-6 max-w-5xl mx-auto"
     >
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 relative mb-8">
         <div>

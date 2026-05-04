@@ -74,7 +74,7 @@ export function UsersClient() {
   if (loading) return <div className="flex items-center justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
 
   return (
-    <motion.div variants={cV} initial="hidden" animate="show" className="space-y-6 relative max-w-6xl">
+    <motion.div variants={cV} initial="hidden" animate="show" className="space-y-6 relative max-w-6xl mx-auto">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <div><h1 className="text-3xl font-bold text-foreground">User Management</h1><p className="text-muted-foreground mt-2">Manage building residents and administrators.</p></div>
         <Button onClick={() => handleOpenModal()} className="flex items-center gap-2 shadow-sm rounded-xl"><UserPlus className="h-4 w-4" /> Edit User</Button>

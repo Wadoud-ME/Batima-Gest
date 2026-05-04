@@ -65,7 +65,7 @@ export function MaintenanceClient({ isAdmin, currentUser }: { isAdmin: boolean; 
   if (loading) return <div className="flex items-center justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-amber-500" /></div>;
 
   return (
-    <motion.div variants={cV} initial="hidden" animate="show" className="space-y-6 max-w-6xl relative">
+    <motion.div variants={cV} initial="hidden" animate="show" className="space-y-6 max-w-6xl mx-auto relative">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <div>
           <h1 className="text-3xl font-bold tracking-tight flex items-center gap-3">{isAdmin ? "Facility Tickets" : "My Requests"} <Wrench className="h-6 w-6 text-amber-500" /></h1>

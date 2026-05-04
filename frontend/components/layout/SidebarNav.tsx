@@ -13,9 +13,11 @@ import {
   User,
   ShieldAlert,
 } from "lucide-react";
+import { useSidebar } from "./SidebarContext";
 
 export function SidebarNav({ isAdmin }: { isAdmin: boolean }) {
   const pathname = usePathname();
+  const { isCollapsed } = useSidebar();
 
   const residentNav = [
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -37,17 +39,19 @@ export function SidebarNav({ isAdmin }: { isAdmin: boolean }) {
   const navigation = isAdmin ? adminNav : residentNav;
 
   return (
-    <nav className="flex flex-1 flex-col px-4 py-4 space-y-2">
+    <nav className="flex flex-1 flex-col px-3 py-4 space-y-2 overflow-y-auto">
       {navigation.map((item) => {
         // Precise active state matching
-        const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(`${item.href}/`));
+        const isActive = pathname === item.href || (item.href !== "/" && item.href !== "/admin" && pathname.startsWith(`${item.href}/`));
         
         return (
           <Link
             key={item.name}
             href={item.href}
+            title={isCollapsed ? item.name : undefined}
             className={cn(
-              "flex items-center gap-x-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-all duration-200 group",
+              "flex items-center rounded-xl transition-all duration-200 group overflow-hidden",
+              isCollapsed ? "justify-center w-12 h-12 mx-auto" : "gap-x-3 px-3 py-2.5 text-sm font-semibold",
               isActive 
                 ? "bg-primary text-primary-foreground shadow-md shadow-primary/20 scale-[1.02]" 
                 : "hover:bg-accent hover:text-accent-foreground text-muted-foreground"
@@ -61,7 +65,7 @@ export function SidebarNav({ isAdmin }: { isAdmin: boolean }) {
                   : "text-muted-foreground group-hover:text-foreground"
               )} 
             />
-            {item.name}
+            {!isCollapsed && <span className="truncate">{item.name}</span>}
           </Link>
         );
       })}

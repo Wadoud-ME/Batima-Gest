@@ -90,7 +90,7 @@ export function DocumentsClient({ isAdmin, userId }: { isAdmin: boolean; userId:
   if (loading) return <div className="flex items-center justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
 
   return (
-    <motion.div variants={cV} initial="hidden" animate="show" className="space-y-6 relative">
+    <motion.div variants={cV} initial="hidden" animate="show" className="space-y-6 max-w-6xl mx-auto relative">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <div>
           <h1 className="text-3xl font-bold text-foreground">{isAdmin ? "Manage Documents" : "My Documents"}</h1>

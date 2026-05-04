@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui";
 import { createClient } from "@/lib/supabase/client";
 
-export function LogoutButton() {
+export function LogoutButton({ isCollapsed }: { isCollapsed?: boolean }) {
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
   const supabase = createClient();
@@ -35,9 +35,11 @@ export function LogoutButton() {
     <>
       <button
         onClick={() => setIsOpen(true)}
-        className="flex items-center justify-center gap-2 py-3 px-4 hover:bg-destructive/10 hover:text-destructive text-muted-foreground rounded-xl transition-all w-full font-semibold">
-        <LogOut className="h-5 w-5" />
-        <span className="text-sm">Sign Out</span>
+        className={`flex items-center justify-center gap-2 hover:bg-destructive/10 hover:text-destructive text-muted-foreground rounded-xl transition-all font-semibold ${isCollapsed ? 'p-3 w-12 h-12' : 'py-3 px-4 w-full'}`}
+        title={isCollapsed ? "Sign Out" : undefined}
+      >
+        <LogOut className="h-5 w-5 shrink-0" />
+        {!isCollapsed && <span className="text-sm">Sign Out</span>}
       </button>
 
       {isOpen && mounted && createPortal(

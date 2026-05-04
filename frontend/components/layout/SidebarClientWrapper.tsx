@@ -12,7 +12,7 @@ export function SidebarClientWrapper({
       initial={{ x: -60, opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
       transition={{ duration: 0.6, ease: "easeOut", delay: 0.1 }}
-      className="flex flex-col w-64 bg-card border-r border-border h-full shadow-lg text-foreground backdrop-blur-3xl relative z-40"
+      className="flex flex-col w-full bg-card border-r border-border h-full shadow-lg text-foreground backdrop-blur-3xl relative z-40 overflow-hidden"
     >
       {children}
     </motion.div>

@@ -43,7 +43,7 @@ export function ProfileClient({ isAdmin, userId, initialProfile }: { isAdmin: bo
   };
 
   return (
-    <div className="grid gap-8 max-w-4xl mt-6">
+    <div className="flex flex-col gap-8 max-w-5xl mx-auto mt-6">
       <Card className="p-8 flex flex-col sm:flex-row items-center sm:items-start gap-6">
         <div className="relative h-28 w-28 shrink-0">
           <div className="h-full w-full rounded-full border-4 border-muted bg-muted/50 flex items-center justify-center shadow-sm overflow-hidden">
@@ -62,7 +62,7 @@ export function ProfileClient({ isAdmin, userId, initialProfile }: { isAdmin: bo
       </Card>
 
       <Card className="p-6 sm:p-8">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 border-b border-border pb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 border-b border-border pb-4">
           <div><h3 className="text-xl font-bold tracking-tight">Personal Information</h3><p className="text-sm text-muted-foreground mt-1">Review and update your contact details.</p></div>
           {!isEditing && <Button onClick={() => setIsEditing(true)} variant="outline" className="shadow-sm w-full sm:w-auto">Edit Details</Button>}
         </div>

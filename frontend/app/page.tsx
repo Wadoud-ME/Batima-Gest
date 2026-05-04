@@ -1,24 +1,38 @@
 import Link from "next/link";
-import { Building2, ArrowRight, ShieldCheck, Wrench, Megaphone, Smartphone } from "lucide-react";
+import { Building2, ArrowRight, ShieldCheck, Wrench, Megaphone } from "lucide-react";
+import { createClient } from "@/lib/supabase/server";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
-export default function Home() {
+export default async function Home() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
   return (
     <div className="min-h-screen bg-background text-foreground overflow-hidden flex flex-col">
       {/* Navbar */}
       <header className="px-6 lg:px-8 py-6 flex items-center justify-between z-10 relative">
-        <div className="flex items-center gap-3">
+        <Link href="/" className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary shadow-lg shadow-primary/20">
             <Building2 className="h-6 w-6 text-primary-foreground" />
           </div>
           <span className="text-2xl font-bold tracking-tight">Batima-Gest</span>
-        </div>
+        </Link>
         <div className="flex items-center gap-4">
-          <Link href="/login" className="text-sm font-semibold hover:text-primary transition-colors">
-            Log in
-          </Link>
-          <Link href="/signup" className="rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 transition-all hover:scale-105 active:scale-95">
-            Get Started
-          </Link>
+          <ThemeToggle />
+          {user ? (
+            <Link href="/dashboard" className="rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 transition-all hover:scale-105 active:scale-95 flex items-center gap-2">
+              Go to Dashboard <ArrowRight className="h-4 w-4" />
+            </Link>
+          ) : (
+            <>
+              <Link href="/login" className="text-sm font-semibold hover:text-primary transition-colors">
+                Log in
+              </Link>
+              <Link href="/signup" className="rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 transition-all hover:scale-105 active:scale-95">
+                Get Started
+              </Link>
+            </>
+          )}
         </div>
       </header>
 
@@ -38,18 +52,26 @@ export default function Home() {
               Batima-Gest brings your building into the digital age. Connect administrators and residents, track maintenance requests, and share important documents seamlessly.
             </p>
             <div className="mt-10 flex items-center justify-center gap-x-6">
-              <Link href="/signup" className="rounded-full bg-primary px-8 py-3.5 text-base font-semibold text-primary-foreground shadow-lg shadow-primary/30 hover:bg-primary/90 transition-all hover:scale-105 active:scale-95 flex items-center gap-2">
-                Start for free <ArrowRight className="h-4 w-4" />
-              </Link>
-              <Link href="/login" className="text-base font-semibold leading-6 hover:text-primary transition-colors flex items-center gap-2 group">
-                Resident Login <span aria-hidden="true" className="group-hover:translate-x-1 transition-transform">→</span>
-              </Link>
+              {user ? (
+                <Link href="/dashboard" className="rounded-full bg-primary px-8 py-3.5 text-base font-semibold text-primary-foreground shadow-lg shadow-primary/30 hover:bg-primary/90 transition-all hover:scale-105 active:scale-95 flex items-center gap-2">
+                  Enter Dashboard <ArrowRight className="h-4 w-4" />
+                </Link>
+              ) : (
+                <>
+                  <Link href="/signup" className="rounded-full bg-primary px-8 py-3.5 text-base font-semibold text-primary-foreground shadow-lg shadow-primary/30 hover:bg-primary/90 transition-all hover:scale-105 active:scale-95 flex items-center gap-2">
+                    Start for free <ArrowRight className="h-4 w-4" />
+                  </Link>
+                  <Link href="/login" className="text-base font-semibold leading-6 hover:text-primary transition-colors flex items-center gap-2 group">
+                    Resident Login <span aria-hidden="true" className="group-hover:translate-x-1 transition-transform">→</span>
+                  </Link>
+                </>
+              )}
             </div>
           </div>
 
           {/* Feature Cards */}
-          <div className="mx-auto mt-24 max-w-5xl sm:mt-32 lg:mt-40">
-            <div className="grid grid-cols-1 gap-y-8 sm:grid-cols-2 lg:grid-cols-3 lg:gap-x-8">
+          <div className="mx-auto mt-24 max-w-7xl sm:mt-32 lg:mt-40">
+            <div className="grid grid-cols-1 gap-y-8 sm:grid-cols-2 lg:grid-cols-3 lg:gap-x-12">
               <div className="rounded-3xl border border-border/50 bg-card/40 backdrop-blur-xl p-8 shadow-sm hover:shadow-md transition-shadow">
                 <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-xl bg-amber-500/10 text-amber-500">
                   <Wrench className="h-6 w-6" />
