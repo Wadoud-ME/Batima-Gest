@@ -1,4 +1,4 @@
-import { cookies } from "next/headers";
+import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import {
   Users,
@@ -16,14 +16,28 @@ import { LogoutButton } from "@/components/LogoutButton";
 import { SidebarClientWrapper } from "@/components/layout/SidebarClientWrapper";
 
 export async function Sidebar() {
-  const cookieStore = await cookies();
-  const mockRole = cookieStore.get("mockRole")?.value || "Resident"; // Default to resident fallback
-  const isAdmin = mockRole === "Admin";
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  let isAdmin = false;
+  let userName = "User";
+
+  if (user) {
+    const { data: profile } = await supabase
+      .from("users")
+      .select("role, name")
+      .eq("id", user.id)
+      .single();
+
+    isAdmin = profile?.role === "Admin";
+    userName = profile?.name || user.email?.split("@")[0] || "User";
+  }
 
   const residentNav = [
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
     { name: "Announcements", href: "/announcements", icon: Megaphone },
     { name: "My Requests", href: "/maintenance", icon: Wrench },
+    { name: "Documents", href: "/documents", icon: FileText },
     { name: "Profile", href: "/profile", icon: User },
   ];
 
@@ -58,6 +72,9 @@ export async function Sidebar() {
       </nav>
       <div className="mt-auto px-4 py-3 flex flex-col gap-2 bg-muted/30 border-t border-border">
         <div className="flex flex-col overflow-hidden mb-2">
+          <p className="text-sm font-semibold text-foreground truncate">
+            {userName}
+          </p>
           <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">
             {isAdmin ? "Administrator" : "Resident"}
           </p>

@@ -1,14 +1,22 @@
-import { cookies } from "next/headers";
+import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { UsersClient } from "./UsersClient";
 
 export const dynamic = "force-dynamic";
 
 export default async function UserManagementPage() {
-  const cookieStore = await cookies();
-  const mockRole = cookieStore.get("mockRole")?.value || "Resident";
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
 
-  if (mockRole !== "Admin") {
+  if (!user) redirect("/login");
+
+  const { data: profile } = await supabase
+    .from("users")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+
+  if (profile?.role !== "Admin") {
     redirect("/dashboard");
   }
 

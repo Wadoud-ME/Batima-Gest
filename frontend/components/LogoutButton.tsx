@@ -6,10 +6,12 @@ import { LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui";
+import { createClient } from "@/lib/supabase/client";
 
 export function LogoutButton() {
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
+  const supabase = createClient();
 
   const [mounted, setMounted] = useState(false);
 
@@ -17,12 +19,16 @@ export function LogoutButton() {
     setMounted(true);
   }, []);
 
-  const handleLogout = () => {
-    document.cookie =
-      "mockRole=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-    toast.success("Logged out successfully (Mock)");
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      toast.error("Error signing out");
+      return;
+    }
+    toast.success("Logged out successfully");
     setIsOpen(false);
-    window.location.href = "/login";
+    router.push("/login");
+    router.refresh();
   };
 
   return (

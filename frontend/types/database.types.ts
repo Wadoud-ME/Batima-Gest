@@ -16,6 +16,7 @@ export interface Database {
           email: string;
           name: string | null;
           role: "Admin" | "Resident";
+          avatar_url: string | null;
         };
         Insert: {
           id: string;
@@ -23,6 +24,7 @@ export interface Database {
           email: string;
           name?: string | null;
           role?: "Admin" | "Resident";
+          avatar_url?: string | null;
         };
         Update: {
           id?: string;
@@ -30,7 +32,9 @@ export interface Database {
           email?: string;
           name?: string | null;
           role?: "Admin" | "Resident";
+          avatar_url?: string | null;
         };
+        Relationships: [];
       };
       announcements: {
         Row: {
@@ -38,6 +42,7 @@ export interface Database {
           created_at: string;
           title: string;
           content: string;
+          is_pinned: boolean;
           author_id: string;
         };
         Insert: {
@@ -45,6 +50,7 @@ export interface Database {
           created_at?: string;
           title: string;
           content: string;
+          is_pinned?: boolean;
           author_id: string;
         };
         Update: {
@@ -52,8 +58,18 @@ export interface Database {
           created_at?: string;
           title?: string;
           content?: string;
+          is_pinned?: boolean;
           author_id?: string;
         };
+        Relationships: [
+          {
+            foreignKeyName: "announcements_author_id_fkey";
+            columns: ["author_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          }
+        ];
       };
       maintenance_requests: {
         Row: {
@@ -83,6 +99,15 @@ export interface Database {
           image_url?: string | null;
           resident_id?: string;
         };
+        Relationships: [
+          {
+            foreignKeyName: "maintenance_requests_resident_id_fkey";
+            columns: ["resident_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          }
+        ];
       };
       documents: {
         Row: {
@@ -109,6 +134,15 @@ export interface Database {
           file_url?: string;
           uploaded_by?: string;
         };
+        Relationships: [
+          {
+            foreignKeyName: "documents_uploaded_by_fkey";
+            columns: ["uploaded_by"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          }
+        ];
       };
       payments: {
         Row: {
@@ -135,6 +169,15 @@ export interface Database {
           month?: string;
           status?: "paid" | "unpaid";
         };
+        Relationships: [
+          {
+            foreignKeyName: "payments_resident_id_fkey";
+            columns: ["resident_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          }
+        ];
       };
     };
     Views: {
@@ -144,6 +187,9 @@ export interface Database {
       [_ in never]: never;
     };
     Enums: {
+      [_ in never]: never;
+    };
+    CompositeTypes: {
       [_ in never]: never;
     };
   };

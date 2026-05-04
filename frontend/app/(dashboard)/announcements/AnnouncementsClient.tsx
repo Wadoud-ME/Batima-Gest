@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card, Button, Input, Textarea, Label } from "@/components/ui";
 import {
   Megaphone,
@@ -11,41 +11,57 @@ import {
   CalendarDays,
   User,
   Eye,
+  Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { createPortal } from "react-dom";
+import { createClient } from "@/lib/supabase/client";
 
-export function AnnouncementsClient({ isAdmin }: { isAdmin: boolean }) {
-  const [announcements, setAnnouncements] = useState([
-    {
-      id: "1",
-      title: "Summer Pool Hours Extended",
-      content:
-        "The community pool will now be open from 7 AM to 10 PM daily. Please remember to bring your resident ID tags and limit guests to 2 per household. Glass containers are strictly prohibited on the pool deck. Enjoy the summer!",
-      created_at: new Date().toISOString(),
-      views: 45,
-      users: { name: "Sarah Admin" },
-    },
-    {
-      id: "2",
-      title: "Scheduled Fire Alarm Test",
-      content:
-        "There will be a brief fire alarm test this Friday at 1 PM. No evacuation is required unless the alarm sounds for longer than 3 continuous minutes. Maintenance personnel will be walking the halls during this time.",
-      created_at: new Date(Date.now() - 86400000).toISOString(),
-      views: 112,
-      users: { name: "System Automated" },
-    },
-  ]);
+interface Announcement {
+  id: string;
+  title: string;
+  content: string;
+  is_pinned: boolean;
+  created_at: string;
+  author_id: string;
+  users: { name: string | null } | null;
+}
+
+export function AnnouncementsClient({ isAdmin, userId }: { isAdmin: boolean; userId: string }) {
+  const supabase = createClient();
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState({ title: "", content: "" });
+  const [saving, setSaving] = useState(false);
 
   const [announcementToDelete, setAnnouncementToDelete] = useState<string | null>(null);
   const [mounted, setMounted] = useState(() => typeof window !== "undefined");
 
-  const handleOpenModal = (announcement?: any) => {
+  const fetchAnnouncements = useCallback(async () => {
+    const { data, error } = await supabase
+      .from("announcements")
+      .select("*, users(name)")
+      .order("is_pinned", { ascending: false })
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      toast.error("Failed to load announcements");
+      console.error(error);
+    } else {
+      setAnnouncements(data as unknown as Announcement[]);
+    }
+    setLoading(false);
+  }, [supabase]);
+
+  useEffect(() => {
+    fetchAnnouncements();
+  }, [fetchAnnouncements]);
+
+  const handleOpenModal = (announcement?: Announcement) => {
     if (announcement) {
       setEditingId(announcement.id);
       setFormData({ title: announcement.title, content: announcement.content });
@@ -56,26 +72,42 @@ export function AnnouncementsClient({ isAdmin }: { isAdmin: boolean }) {
     setIsModalOpen(true);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!formData.title || !formData.content) return;
+    setSaving(true);
 
     if (editingId) {
-      setAnnouncements((prev) =>
-        prev.map((a) => (a.id === editingId ? { ...a, ...formData } : a)),
-      );
-      toast.success("Announcement updated");
+      const { error } = await supabase
+        .from("announcements")
+        .update({ title: formData.title, content: formData.content })
+        .eq("id", editingId);
+
+      if (error) {
+        toast.error("Failed to update announcement");
+        console.error(error);
+      } else {
+        toast.success("Announcement updated");
+        fetchAnnouncements();
+      }
     } else {
-      const newAnnouncement = {
-        id: Date.now().toString(),
-        ...formData,
-        created_at: new Date().toISOString(),
-        views: 0,
-        users: { name: "Admin" },
-      };
-      setAnnouncements([newAnnouncement, ...announcements]);
-      toast.success("Announcement broadcasted successfully");
+      const { error } = await supabase
+        .from("announcements")
+        .insert({
+          title: formData.title,
+          content: formData.content,
+          author_id: userId,
+        });
+
+      if (error) {
+        toast.error("Failed to create announcement");
+        console.error(error);
+      } else {
+        toast.success("Announcement broadcasted successfully");
+        fetchAnnouncements();
+      }
     }
 
+    setSaving(false);
     setIsModalOpen(false);
   };
 
@@ -83,10 +115,20 @@ export function AnnouncementsClient({ isAdmin }: { isAdmin: boolean }) {
     setAnnouncementToDelete(id);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (announcementToDelete) {
-      setAnnouncements((prev) => prev.filter((a) => a.id !== announcementToDelete));
-      toast.info("Announcement removed");
+      const { error } = await supabase
+        .from("announcements")
+        .delete()
+        .eq("id", announcementToDelete);
+
+      if (error) {
+        toast.error("Failed to delete announcement");
+        console.error(error);
+      } else {
+        toast.info("Announcement removed");
+        fetchAnnouncements();
+      }
       setAnnouncementToDelete(null);
     }
   };
@@ -105,6 +147,14 @@ export function AnnouncementsClient({ isAdmin }: { isAdmin: boolean }) {
     hidden: { opacity: 0, scale: 0.95, y: 20 },
     show: { opacity: 1, scale: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } },
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <motion.div 
@@ -157,15 +207,15 @@ export function AnnouncementsClient({ isAdmin }: { isAdmin: boolean }) {
           announcements.map((announcement, index) => (
             <motion.div variants={itemVariants} key={announcement.id}>
             <Card
-              className={`p-0 overflow-hidden relative transition-all duration-300 hover:shadow-xl bg-card/60 backdrop-blur-xl ${index === 0 ? "border-primary/50 shadow-primary/5" : "border-border/40 shadow-sm"}`}>
-              {index === 0 && (
+              className={`p-0 overflow-hidden relative transition-all duration-300 hover:shadow-xl bg-card/60 backdrop-blur-xl ${announcement.is_pinned ? "border-primary/50 shadow-primary/5" : "border-border/40 shadow-sm"}`}>
+              {announcement.is_pinned && (
                 <div className="absolute top-0 right-0 px-3 py-1 bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-wider rounded-bl-xl shadow-sm z-10">
                   Pinned
                 </div>
               )}
               {/* Subtle top gradient bar */}
               <div
-                className={`h-1.5 w-full ${index === 0 ? "bg-gradient-to-r from-primary/80 to-primary/20" : "bg-muted"}`}
+                className={`h-1.5 w-full ${announcement.is_pinned ? "bg-gradient-to-r from-primary/80 to-primary/20" : "bg-muted"}`}
               />
 
               <div className="p-6">
@@ -183,7 +233,7 @@ export function AnnouncementsClient({ isAdmin }: { isAdmin: boolean }) {
                     <div className="flex flex-wrap items-center gap-x-6 gap-y-2 pt-4 border-t border-border mt-4 text-xs font-semibold text-muted-foreground/80">
                       <div className="flex items-center gap-1.5">
                         <User className="h-4 w-4 text-foreground/30" /> By{" "}
-                        {announcement.users?.name}
+                        {announcement.users?.name || "Unknown"}
                       </div>
                       <div className="flex items-center gap-1.5">
                         <CalendarDays className="h-4 w-4 text-foreground/30" />{" "}
@@ -192,11 +242,6 @@ export function AnnouncementsClient({ isAdmin }: { isAdmin: boolean }) {
                           { month: "long", day: "numeric", year: "numeric" },
                         )}
                       </div>
-                      {isAdmin && (
-                        <div className="flex items-center gap-1.5 ml-auto text-primary">
-                          <Eye className="h-4 w-4" /> {announcement.views} views
-                        </div>
-                      )}
                     </div>
                   </div>
 
@@ -282,7 +327,8 @@ export function AnnouncementsClient({ isAdmin }: { isAdmin: boolean }) {
                 <Button variant="ghost" className="rounded-xl" onClick={() => setIsModalOpen(false)}>
                   Discard
                 </Button>
-                <Button onClick={handleSave} className="shadow-md rounded-xl">
+                <Button onClick={handleSave} disabled={saving} className="shadow-md rounded-xl">
+                  {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
                   {editingId ? "Update Notice" : "Publish to All"}
                 </Button>
               </div>
