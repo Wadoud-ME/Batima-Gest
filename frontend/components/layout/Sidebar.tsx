@@ -10,6 +10,7 @@ import {
   Settings,
   User,
   ShieldAlert,
+  Building2,
 } from "lucide-react";
 
 import { LogoutButton } from "@/components/LogoutButton";
@@ -54,7 +55,10 @@ export async function Sidebar() {
 
   return (
     <SidebarClientWrapper>
-      <div className="flex h-16 shrink-0 items-center px-6">
+      <div className="flex h-16 shrink-0 items-center gap-3 px-6">
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
+          <Building2 className="h-5 w-5" />
+        </div>
         <h1 className="text-xl font-bold tracking-tight text-primary">
           Batima-Gest {isAdmin ? "Admin" : "Portal"}
         </h1>
